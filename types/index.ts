@@ -29,6 +29,7 @@ export type CreateEventParams = {
     price: string
     isFree: boolean
     url: string
+    capacity?: number
   }
   path: string
 }
@@ -47,6 +48,7 @@ export type UpdateEventParams = {
     price: string
     isFree: boolean
     url: string
+    capacity?: number
   }
   path: string
 }
@@ -61,6 +63,10 @@ export type GetAllEventsParams = {
   category: string
   limit: number
   page: number
+  location?: string
+  from?: string
+  to?: string
+  includePast?: boolean
 }
 
 export type GetEventsByUserParams = {
@@ -110,6 +116,7 @@ export type CheckoutOrderParams = {
   price: string
   isFree: boolean
   buyerId: string
+  quantity?: number
 }
 
 export type CreateOrderParams = {
@@ -118,6 +125,8 @@ export type CreateOrderParams = {
   buyerId: string
   totalAmount: string
   createdAt: Date
+  quantity?: number
+  paymentIntentId?: string
 }
 
 export type GetOrdersByEventParams = {

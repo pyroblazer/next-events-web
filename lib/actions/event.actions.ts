@@ -99,19 +99,26 @@ export async function deleteEvent({ eventId, path }: DeleteEventParams) {
 }
 
 // GET ALL EVENTS
-export async function getAllEvents({ query, limit = 6, page, category }: GetAllEventsParams) {
+export async function getAllEvents({ query, limit = 6, page, category, location, from, to, includePast = false }: GetAllEventsParams) {
   try {
     await connectToDatabase()
 
     const titleCondition = query ? { title: { $regex: escapeRegExp(query), $options: 'i' } } : {}
     const categoryCondition = category ? await getCategoryByName(category) : null
+    const locationCondition = location ? { location: { $regex: escapeRegExp(location), $options: 'i' } } : {}
+    const dateRange: Record<string, Date> = {}
+    if (from && !isNaN(Date.parse(from))) dateRange.$gte = new Date(from)
+    if (to && !isNaN(Date.parse(to))) dateRange.$lte = new Date(to)
+    // Upcoming (not yet finished) events only, unless the caller asks for past ones too
+    if (!includePast && !dateRange.$gte) dateRange.$gte = new Date()
+    const dateCondition = Object.keys(dateRange).length ? { endDateTime: dateRange } : {}
     const conditions = {
-      $and: [titleCondition, categoryCondition ? { category: categoryCondition._id } : {}],
+      $and: [titleCondition, locationCondition, dateCondition, categoryCondition ? { category: categoryCondition._id } : {}],
     }
 
     const skipAmount = (Number(page) - 1) * limit
     const eventsQuery = Event.find(conditions)
-      .sort({ createdAt: 'desc' })
+      .sort({ startDateTime: 1 })
       .skip(skipAmount)
       .limit(limit)
 

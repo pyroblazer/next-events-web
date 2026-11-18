@@ -4,6 +4,11 @@ export interface IOrder extends Document {
   createdAt: Date
   stripeId: string
   totalAmount: string
+  quantity: number
+  ticketCode: string
+  status: "paid" | "refunded"
+  checkedInAt?: Date
+  paymentIntentId?: string
   event: {
     _id: string
     title: string
@@ -37,6 +42,11 @@ const OrderSchema = new Schema({
   totalAmount: {
     type: String,
   },
+  quantity: { type: Number, default: 1, min: 1 },
+  ticketCode: { type: String, unique: true, sparse: true, index: true },
+  status: { type: String, enum: ["paid", "refunded"], default: "paid" },
+  checkedInAt: { type: Date },
+  paymentIntentId: { type: String, index: true },
   event: {
     type: Schema.Types.ObjectId,
     ref: 'Event',

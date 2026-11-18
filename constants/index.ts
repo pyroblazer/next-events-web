@@ -24,4 +24,5 @@ export const eventDefaultValues = {
   price: '',
   isFree: false,
   url: '',
+  capacity: 0,
 }

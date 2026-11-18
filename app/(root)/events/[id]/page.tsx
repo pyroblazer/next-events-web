@@ -4,6 +4,22 @@ import { getEventById, getRelatedEventsByCategory } from '@/lib/actions/event.ac
 import { formatDateTime } from '@/lib/utils';
 import { SearchParamProps } from '@/types'
 import Image from 'next/image';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  try {
+    const event = await getEventById(params.id)
+    const description = (event.description || '').slice(0, 160)
+    return {
+      title: event.title,
+      description,
+      openGraph: { title: event.title, description, images: event.imageUrl ? [event.imageUrl] : [] },
+      twitter: { card: 'summary_large_image', title: event.title, description },
+    }
+  } catch {
+    return { title: 'Event not found' }
+  }
+}
 
 const EventDetails = async ({ params: { id }, searchParams }: SearchParamProps) => {
   const event = await getEventById(id);
