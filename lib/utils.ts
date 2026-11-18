@@ -91,3 +91,7 @@ export const handleError = (error: unknown) => {
   console.error(error)
   throw new Error(typeof error === 'string' ? error : JSON.stringify(error))
 }
+
+
+/** Escapes user input before it is used inside a MongoDB $regex / RegExp. */
+export const escapeRegExp = (input: string) => input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

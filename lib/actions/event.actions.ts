@@ -6,7 +6,8 @@ import { connectToDatabase } from '@/lib/database'
 import Event from '@/lib/database/models/event.model'
 import User from '@/lib/database/models/user.model'
 import Category from '@/lib/database/models/category.model'
-import { handleError } from '@/lib/utils'
+import { handleError, escapeRegExp } from '@/lib/utils'
+import { requireUserId } from '@/lib/auth'
 
 import {
   CreateEventParams,
@@ -18,7 +19,7 @@ import {
 } from '@/types'
 
 const getCategoryByName = async (name: string) => {
-  return Category.findOne({ name: { $regex: name, $options: 'i' } })
+  return Category.findOne({ name: { $regex: escapeRegExp(name), $options: 'i' } })
 }
 
 const populateEvent = (query: any) => {
@@ -28,11 +29,11 @@ const populateEvent = (query: any) => {
 }
 
 // CREATE
-export async function createEvent({ userId, event, path }: CreateEventParams) {
+export async function createEvent({ event, path }: CreateEventParams) {
   try {
+    const userId = requireUserId()
     await connectToDatabase()
 
-    console.log(userId)
     const organizer = await User.findById(userId)
     if (!organizer) throw new Error('Organizer not found')
 
@@ -61,8 +62,9 @@ export async function getEventById(eventId: string) {
 }
 
 // UPDATE
-export async function updateEvent({ userId, event, path }: UpdateEventParams) {
+export async function updateEvent({ event, path }: UpdateEventParams) {
   try {
+    const userId = requireUserId()
     await connectToDatabase()
 
     const eventToUpdate = await Event.findById(event._id)
@@ -88,7 +90,8 @@ export async function deleteEvent({ eventId, path }: DeleteEventParams) {
   try {
     await connectToDatabase()
 
-    const deletedEvent = await Event.findByIdAndDelete(eventId)
+    const userId = requireUserId()
+    const deletedEvent = await Event.findOneAndDelete({ _id: eventId, organizer: userId })
     if (deletedEvent) revalidatePath(path)
   } catch (error) {
     handleError(error)
@@ -100,7 +103,7 @@ export async function getAllEvents({ query, limit = 6, page, category }: GetAllE
   try {
     await connectToDatabase()
 
-    const titleCondition = query ? { title: { $regex: query, $options: 'i' } } : {}
+    const titleCondition = query ? { title: { $regex: escapeRegExp(query), $options: 'i' } } : {}
     const categoryCondition = category ? await getCategoryByName(category) : null
     const conditions = {
       $and: [titleCondition, categoryCondition ? { category: categoryCondition._id } : {}],
@@ -112,8 +115,10 @@ export async function getAllEvents({ query, limit = 6, page, category }: GetAllE
       .skip(skipAmount)
       .limit(limit)
 
-    const events = await populateEvent(eventsQuery)
-    const eventsCount = await Event.countDocuments(conditions)
+    const [events, eventsCount] = await Promise.all([
+      populateEvent(eventsQuery.lean()),
+      Event.countDocuments(conditions),
+    ])
 
     return {
       data: JSON.parse(JSON.stringify(events)),
@@ -137,8 +142,10 @@ export async function getEventsByUser({ userId, limit = 6, page }: GetEventsByUs
       .skip(skipAmount)
       .limit(limit)
 
-    const events = await populateEvent(eventsQuery)
-    const eventsCount = await Event.countDocuments(conditions)
+    const [events, eventsCount] = await Promise.all([
+      populateEvent(eventsQuery.lean()),
+      Event.countDocuments(conditions),
+    ])
 
     return { data: JSON.parse(JSON.stringify(events)), totalPages: Math.ceil(eventsCount / limit) }
   } catch (error) {
@@ -164,8 +171,10 @@ export async function getRelatedEventsByCategory({
       .skip(skipAmount)
       .limit(limit)
 
-    const events = await populateEvent(eventsQuery)
-    const eventsCount = await Event.countDocuments(conditions)
+    const [events, eventsCount] = await Promise.all([
+      populateEvent(eventsQuery.lean()),
+      Event.countDocuments(conditions),
+    ])
 
     return { data: JSON.parse(JSON.stringify(events)), totalPages: Math.ceil(eventsCount / limit) }
   } catch (error) {
