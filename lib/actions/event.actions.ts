@@ -31,7 +31,7 @@ const populateEvent = (query: any) => {
 // CREATE
 export async function createEvent({ event, path }: CreateEventParams) {
   try {
-    const userId = requireUserId()
+    const userId = await requireUserId()
     await connectToDatabase()
 
     const organizer = await User.findById(userId)
@@ -64,7 +64,7 @@ export async function getEventById(eventId: string) {
 // UPDATE
 export async function updateEvent({ event, path }: UpdateEventParams) {
   try {
-    const userId = requireUserId()
+    const userId = await requireUserId()
     await connectToDatabase()
 
     const eventToUpdate = await Event.findById(event._id)
@@ -90,7 +90,7 @@ export async function deleteEvent({ eventId, path }: DeleteEventParams) {
   try {
     await connectToDatabase()
 
-    const userId = requireUserId()
+    const userId = await requireUserId()
     const deletedEvent = await Event.findOneAndDelete({ _id: eventId, organizer: userId })
     if (deletedEvent) revalidatePath(path)
   } catch (error) {

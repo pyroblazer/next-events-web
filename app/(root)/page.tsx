@@ -5,7 +5,8 @@ import Search from '@/components/shared/Search';
 import { getAllEvents } from '@/lib/actions/event.actions';
 import { SearchParamProps } from '@/types';
 
-export default async function Home({ searchParams }: SearchParamProps) {
+export default async function Home(props: SearchParamProps) {
+  const searchParams = await props.searchParams
   const page = Number(searchParams?.page) || 1;
   const searchText = (searchParams?.query as string) || '';
   const category = (searchParams?.category as string) || '';

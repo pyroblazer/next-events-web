@@ -26,7 +26,7 @@ async function countTicketsSold(eventId: string | ObjectId): Promise<number> {
 
 export const checkoutOrder = async (order: CheckoutOrderParams) => {
   // Never trust price / isFree / buyer from the client: load the event and use the session user.
-  const buyerId = requireUserId();
+  const buyerId = await requireUserId();
   await connectToDatabase();
 
   const event = await Event.findById(order.eventId);
@@ -126,7 +126,7 @@ export async function markOrderRefunded(paymentIntentId: string) {
 
 /** Organizer check-in: validates the ticket belongs to one of the caller's events. */
 export async function checkInTicket(ticketCode: string) {
-  const userId = requireUserId()
+  const userId = await requireUserId()
   await connectToDatabase()
 
   const order = await Order.findOne({ ticketCode: String(ticketCode).trim().toUpperCase() })
@@ -145,7 +145,7 @@ export async function checkInTicket(ticketCode: string) {
 
 /** Organizer-only sales summary for an event. */
 export async function getEventDashboard(eventId: string) {
-  const userId = requireUserId()
+  const userId = await requireUserId()
   await connectToDatabase()
 
   const event = await Event.findOne({ _id: eventId, organizer: userId })
@@ -191,7 +191,7 @@ export async function getOrdersByEvent({ searchString, eventId }: GetOrdersByEve
     const eventObjectId = new ObjectId(eventId)
 
     // Only the organizer of the event may list its orders
-    const userId = requireUserId()
+    const userId = await requireUserId()
     const ownedEvent = await Event.exists({ _id: eventObjectId, organizer: userId })
     if (!ownedEvent) throw new Error('Unauthorized')
 

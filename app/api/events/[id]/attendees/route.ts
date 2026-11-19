@@ -1,9 +1,10 @@
-import { auth } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 import { getEventDashboard } from '@/lib/actions/order.actions'
 import { buildAttendeesCsv } from '@/lib/tickets'
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const { sessionClaims } = auth()
+export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const params = await ctx.params
+  const { sessionClaims } = await auth()
   if (!sessionClaims?.userId) return new Response('Unauthorized', { status: 401 })
 
   try {

@@ -3,8 +3,9 @@ import { getEventDashboard } from '@/lib/actions/order.actions'
 import CheckInForm from '@/components/shared/CheckInForm'
 import { formatDateTime, formatPrice } from '@/lib/utils'
 
-export default async function EventDashboard({ params }: { params: { id: string } }) {
-  const { event, stats, orders } = await getEventDashboard(params.id)
+export default async function EventDashboard({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const { event, stats, orders } = await getEventDashboard(id)
 
   const cards: [string, string][] = [
     ['Tickets sold', String(stats.ticketsSold)],

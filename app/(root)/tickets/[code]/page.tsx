@@ -6,8 +6,9 @@ import { formatDateTime } from '@/lib/utils'
 
 export const metadata = { title: 'Your ticket', robots: { index: false } }
 
-export default async function TicketPage({ params }: { params: { code: string } }) {
-  const ticket = await getTicketByCode(params.code)
+export default async function TicketPage({ params }: { params: Promise<{ code: string }> }) {
+  const { code } = await params
+  const ticket = await getTicketByCode(code)
   if (!ticket || !ticket.event) notFound()
 
   const qr = await QRCode.toDataURL(ticket.ticketCode, { margin: 1, width: 280 })

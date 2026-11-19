@@ -6,9 +6,10 @@ import { SearchParamProps } from '@/types'
 import Image from 'next/image';
 import type { Metadata } from 'next';
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
   try {
-    const event = await getEventById(params.id)
+    const event = await getEventById(id)
     const description = (event.description || '').slice(0, 160)
     return {
       title: event.title,
@@ -21,7 +22,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-const EventDetails = async ({ params: { id }, searchParams }: SearchParamProps) => {
+const EventDetails = async (props: SearchParamProps) => {
+  const { id } = await props.params
+  const searchParams = await props.searchParams
   const event = await getEventById(id);
 
   const relatedEvents = await getRelatedEventsByCategory({

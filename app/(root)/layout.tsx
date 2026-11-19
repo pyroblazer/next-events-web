@@ -1,7 +1,6 @@
-import dynamic from 'next/dynamic'
+import Header from "@/components/shared/Header"
 import Footer from "@/components/shared/Footer"
 
-const Header = dynamic(() => import('@/components/shared/Header'), { ssr: false })
 
 export default function RootLayout({
   children,
